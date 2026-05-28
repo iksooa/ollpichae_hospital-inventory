@@ -436,7 +436,7 @@ tbody td{padding:8px 10px;white-space:nowrap;vertical-align:middle}
             <!-- 수량 -->
             <div class="ff">
               <label>수량</label>
-              <input type="number" id="hadd-qty" min="1" value="1" style="height:28px;width:100%">
+              <input type="number" id="hadd-qty" min="0.5" step="0.5" value="1" style="height:28px;width:100%">
               <div style="height:16px"></div>
             </div>
 
@@ -494,7 +494,7 @@ tbody td{padding:8px 10px;white-space:nowrap;vertical-align:middle}
           <!-- 입고 수량 -->
           <div class="ff">
             <label>입고 수량</label>
-            <input type="number" id="in-qty" min="1" value="1">
+            <input type="number" id="in-qty" min="0.5" step="0.5" value="1">
             <div style="height:16px"></div>
           </div>
           <!-- 메모 -->
@@ -530,7 +530,7 @@ tbody td{padding:8px 10px;white-space:nowrap;vertical-align:middle}
           </div>
           <div class="ff">
             <label>출고 수량</label>
-            <input type="number" id="out-qty" min="1" value="1">
+            <input type="number" id="out-qty" min="0.5" step="0.5" value="1">
             <div style="height:16px"></div>
           </div>
           <div class="ff">
@@ -579,7 +579,7 @@ tbody td{padding:8px 10px;white-space:nowrap;vertical-align:middle}
         </div>
       </div>
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
-        <div class="ff-qio"><label id="qio-qty-label">수량</label><input type="number" id="qio-qty" min="1" value="1" style="width:100%"></div>
+        <div class="ff-qio"><label id="qio-qty-label">수량</label><input type="number" id="qio-qty" min="0.5" step="0.5" value="1" style="width:100%"></div>
         <div class="ff-qio"><label>메모 (선택)</label><input type="text" id="qio-memo" style="width:100%"></div>
       </div>
       <div style="display:flex;gap:7px;justify-content:flex-end">
@@ -768,7 +768,7 @@ tbody td{padding:8px 10px;white-space:nowrap;vertical-align:middle}
         <label>구분</label>
         <select id="he-type"><option value="in">입고</option><option value="out">출고</option></select>
       </div>
-      <div class="info-f"><label>수량</label><input type="number" id="he-qty" min="1"></div>
+      <div class="info-f"><label>수량</label><input type="number" id="he-qty" min="0.5" step="0.5"></div>
       <!-- 구분선 -->
       <div style="grid-column:1/-1;border-top:1px solid #f0f0ee;margin:4px 0"></div>
       <!-- 유효기간 -->
@@ -1422,6 +1422,21 @@ function renderHist(){
       </div>
     </div>`;
   }).join('');
+
+  // 계 (입고/출고 합계)
+  const totalIn=list.filter(h=>h.type==='in').reduce((s,h)=>s+h.qty,0);
+  const totalOut=list.filter(h=>h.type==='out').reduce((s,h)=>s+h.qty,0);
+  el.innerHTML+=`
+    <div style="display:flex;align-items:center;gap:0;padding:9px 0 4px;border-top:1.5px solid #e0e0de;margin-top:4px;font-weight:600;font-size:12px">
+      <div style="width:6px;flex-shrink:0;margin-right:8px"></div>
+      <div class="hcol-date" style="color:#555">합계</div>
+      <div class="hcol-type" style="color:#1e8449">+${totalIn%1===0?totalIn:totalIn.toFixed(1)}</div>
+      <div class="hcol-qty" style="text-align:right;color:#c0392b">-${totalOut%1===0?totalOut:totalOut.toFixed(1)}</div>
+      <div class="hcol-stock"></div>
+      <div class="hcol-exp"></div>
+      <div class="hcol-memo" style="padding-left:8px;color:#aaa;font-weight:400;font-size:11px">순증감: <span style="color:#1a1a1a;font-weight:600">${(totalIn-totalOut)>=0?'+':''}${(totalIn-totalOut)%1===0?(totalIn-totalOut):(totalIn-totalOut).toFixed(1)}</span></div>
+      <div style="width:40px;flex-shrink:0"></div>
+    </div>`;
 }
 
 // ── LOT TAB ──
@@ -1465,10 +1480,10 @@ function addLotEntry(type){
   const item=items.find(i=>i.id===detailItemId);if(!item)return;
   const noexp=document.getElementById(type+'-noexp').checked;
   const exp=noexp?'':document.getElementById(type+'-exp').value;
-  const qty=parseInt(document.getElementById(type+'-qty').value)||0;
+  const qty=parseFloat(document.getElementById(type+'-qty').value)||0;
   const memo=document.getElementById(type+'-memo').value.trim();
   const dateVal=document.getElementById(type+'-date').value||today();
-  if(qty<=0){toast('수량을 1 이상 입력하세요');return;}
+  if(qty<=0){toast('수량을 입력하세요');return;}
   const existing=item.lots.find(l=>(l.exp||'')===(exp));
   let lotId;
   if(existing){
@@ -1551,7 +1566,7 @@ function toggleHaddNoExp(){
 function submitHistAdd(){
   const item=items.find(i=>i.id===detailItemId);if(!item)return;
   const type=document.getElementById('hadd-type').value;
-  const qty=parseInt(document.getElementById('hadd-qty').value)||0;
+  const qty=parseFloat(document.getElementById('hadd-qty').value)||0;
   if(qty<=0){toast('수량을 입력하세요');return;}
   const noexp=document.getElementById('hadd-noexp').checked;
   const exp=noexp?'':document.getElementById('hadd-exp').value;
@@ -1618,7 +1633,7 @@ function saveHedit(){
   const noexp=document.getElementById('he-noexp').checked;
   const newExp=noexp?'':document.getElementById('he-exp').value;
   const newType=document.getElementById('he-type').value;
-  const newQty=parseInt(document.getElementById('he-qty').value)||0;
+  const newQty=parseFloat(document.getElementById('he-qty').value)||0;
   if(newQty<=0){toast('수량을 입력하세요');return;}
   const dateVal=document.getElementById('he-date').value;
 
@@ -1749,7 +1764,7 @@ function toggleNewLot(){
 }
 function closeQio(){document.getElementById('ov-qio').classList.remove('open');}
 function submitQio(){
-  const qty=parseInt(document.getElementById('qio-qty').value)||0;
+  const qty=parseFloat(document.getElementById('qio-qty').value)||0;
   if(qty<=0){toast('수량을 입력하세요');return;}
   const memo=document.getElementById('qio-memo').value.trim();
   const item=items.find(i=>i.id===qioItemId);if(!item)return;
@@ -2126,9 +2141,36 @@ document.getElementById('chip-input').addEventListener('keydown',e=>{if(e.key===
 document.getElementById('ov-add').addEventListener('keydown',function(e){
   if(e.key==='Enter'){
     const tag=e.target.tagName.toLowerCase();
-    // input 필드에서 엔터 시 저장 (select 제외)
     if(tag==='input') saveNewItem();
   }
+});
+
+// 당일 입출고 모달 엔터키 저장
+document.getElementById('ov-qio').addEventListener('keydown',function(e){
+  if(e.key==='Enter'){
+    const tag=e.target.tagName.toLowerCase();
+    if(tag==='input') submitQio();
+  }
+});
+
+// 이력 수정 모달 엔터키 저장
+document.getElementById('ov-hedit').addEventListener('keydown',function(e){
+  if(e.key==='Enter'){
+    const tag=e.target.tagName.toLowerCase();
+    if(tag==='input') saveHedit();
+  }
+});
+
+// 모든 모달 ESC 닫기
+document.addEventListener('keydown',function(e){
+  if(e.key!=='Escape')return;
+  if(document.getElementById('ov-hedit').classList.contains('open'))closeHedit();
+  else if(document.getElementById('ov-export').classList.contains('open'))closeExport();
+  else if(document.getElementById('ov-cfm').classList.contains('open'))closeCfm();
+  else if(document.getElementById('ov-chip').classList.contains('open'))closeChipModal();
+  else if(document.getElementById('ov-qio').classList.contains('open'))closeQio();
+  else if(document.getElementById('ov-add').classList.contains('open'))closeAdd();
+  else if(document.getElementById('ov-detail').classList.contains('open'))closeDetail();
 });
 
 // ── MEMO ──
