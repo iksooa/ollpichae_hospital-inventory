@@ -1356,6 +1356,7 @@ function toggleItemActive(){
   }
   saveData();render();
 }
+function toggleItemNoExp(prefix){
   const cb=document.getElementById(prefix+'-noexp');
   const wrap=document.getElementById(prefix+'-alert-wrap');
   wrap.style.opacity=cb.checked?'0.3':'1';
